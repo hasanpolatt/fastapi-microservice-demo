@@ -1,3 +1,4 @@
+import base64
 import logging
 import os
 
@@ -10,6 +11,7 @@ from fastapi import FastAPI, File, HTTPException, UploadFile
 from fastapi.security import OAuth2PasswordBearer
 from jwt.exceptions import DecodeError
 
+from gateway import rpc_client
 from models.schemas import (GenerateOtp, GenerateUserToken, UserCredentials,
                             UserRegistration, VerifyOtp)
 
@@ -107,6 +109,41 @@ async def generate_otp(user_data: GenerateOtp):
         raise HTTPException(
             status_code=503, detail="Authentication service is unavailable"
         )
+
+
+@app.post("/ocr", tags=["Machine learning Service"])
+def ocr(file: UploadFile = File(...), payload: dict = _fastapi.Depends(jwt_validation)):
+    """
+    Handles OCR requests by accepting an uploaded file and user details,
+    then forwarding them to the OCR microservice via RabbitMQ.
+    """
+
+    # Save the uploaded file temporarily on the server
+    with open(file.filename, "wb") as buffer:
+        buffer.write(file.file.read())
+
+    # Create an instance of the OCR RPC client
+    ocr_rpc = rpc_client.OcrRpcClient()
+
+    # Read the saved file and encode its contents in Base64 format
+    with open(file.filename, "rb") as buffer:
+        file_data = buffer.read()
+        file_base64 = base64.b64encode(file_data).decode()
+
+    # Prepare the request payload to send to the OCR microservice
+    request_json = {
+        "user_name": payload["username"],
+        "user_email": payload["email"],
+        "user_id": payload["id"],
+        "file": payload["file"],
+    }
+
+    # Send the request to the OCR microservice via RabbitMQ
+    response = ocr_rpc.call(request_json)
+
+    # Remove the temporary file after processing
+    os.remove(file.filename)
+    return response
 
 
 # Entry point to run the FastAPI app using Uvicorn.
