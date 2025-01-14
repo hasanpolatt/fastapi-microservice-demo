@@ -5,7 +5,10 @@ __pycache__/
 .idea
 # C extensions
 *.so
-
+.venv
+env
+Makefile
+gateway/.env
 # Distribution / packaging
 .Python
 build/
