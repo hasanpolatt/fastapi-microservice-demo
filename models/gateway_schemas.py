@@ -1,5 +1,6 @@
 from pydantic import BaseModel
 
+
 # Pydantic models for request body validation.
 class GenerateUserToken(BaseModel):
     username: str

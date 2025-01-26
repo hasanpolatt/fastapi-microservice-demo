@@ -12,7 +12,8 @@ from fastapi.security import OAuth2PasswordBearer
 from jwt.exceptions import DecodeError
 
 from gateway import rpc_client
-from models.gateway_schemas import (GenerateOtp, UserCredentials, UserRegistration)
+from models.gateway_schemas import (GenerateOtp, UserCredentials,
+                                    UserRegistration)
 
 app = FastAPI()
 # Defining an OAuth2 scheme for token-based authentication.

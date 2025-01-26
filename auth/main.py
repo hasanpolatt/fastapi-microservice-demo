@@ -48,6 +48,35 @@ async def create_user(
     )
 
 
+@app.post("/api/token", tags=["User Auth"])
+async def generate_token(
+    user_data: GenerateUserToken, db: _orm.Session = _fastapi.Depends(_services.get_db)
+):
+
+    user = await _services.authenticate_user(
+        email=user_data.username, password=user_data.password, db=db
+    )
+
+    if user == "is_verified_false":
+        logging.info("Email verification is pending. Please verify email to proceed.")
+        raise _fastapi.HTTPException(
+            status_code=403,
+            detail="Email verification is pending. Please verify email to proceed.",
+        )
+
+    if not user:
+        logging.info("Invalid Credentials")
+        raise _fastapi.HTTPException(status_code=401, detail="Invalid Credentials")
+
+    logging.info("JWT Token Created")
+    return await _services.create_token(user=user)
+
+
+@app.get("/check_api")
+async def check_api():
+    return {"status": "Connected to API successfully"}
+
+
 if __name__ == "__main__":
     import uvicorn
 
