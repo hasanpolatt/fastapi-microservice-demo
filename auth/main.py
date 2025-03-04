@@ -7,8 +7,7 @@ import pika
 import services as _services
 import sqlalchemy.orm as _orm
 
-from models.auth_schemas import (GenerateOtp, GenerateUserToken, User,
-                                 UserBase, UserCreate, VerifyOtp)
+from models.auth_schemas import GenerateUserToken, User, UserCreate
 
 connection = pika.BlockingConnection(pika.ConnectionParameters(host="localhost"))
 channel = connection.channel()
@@ -70,6 +69,11 @@ async def generate_token(
 
     logging.info("JWT Token Created")
     return await _services.create_token(user=user)
+
+
+@app.get("/api/users/me", response_model=User, tags=["User Auth"])
+async def get_user(user: User = _fastapi.Depends(_services.get_current_user)):
+    return user
 
 
 @app.get("/check_api")

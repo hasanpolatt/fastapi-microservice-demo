@@ -1,7 +1,6 @@
 import os
 
 import sqlalchemy as _sql
-import sqlalchemy.ext.declarative as _decl
 import sqlalchemy.orm as _orm
 from dotenv import load_dotenv
 
@@ -24,4 +23,4 @@ engine = _sql.create_engine(DATABASE_URL)
 # Creating a session factory to handle database sessions with autocommit and autoflush disabled.
 SessionLocal = _orm.sessionmaker(autocommit=False, autoflush=False, bind=engine)
 # Creating a base class for defining ORM models.
-Base = _decl.declarative_base()
+Base = _orm.declarative_base()

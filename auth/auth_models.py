@@ -18,7 +18,9 @@ class User(_database.Base):
     otp = _sql.Column(_sql.Integer)
     hashed_password = _sql.Column(_sql.String)
     addresses = _orm.relationship("Address", back_populates="user")
-    date_created = _sql.Column(_sql.DateTime, default=_dt.datetime.utcnow)
+    date_created = _sql.Column(
+        _sql.DateTime, default=_dt.datetime.now(_dt.timezone.utc)
+    )
 
     def verify_password(self, password: str):
         return _hash.bcrypt.verify(password, self.hashed_password)

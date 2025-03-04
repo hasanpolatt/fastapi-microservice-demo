@@ -1,13 +1,12 @@
 import os
-import time
 
 import auth_models as _models
 import database as _database
 import email_validator as _email_validator
 import fastapi as _fastapi
 import fastapi.security as _security
+import jwt
 import passlib.hash as _hash
-import pika
 import sqlalchemy.orm as _orm
 from sqlalchemy import and_
 
@@ -51,3 +50,32 @@ async def create_user(user: _schemas.UserCreate, db: _orm.Session):
     user_obj = _models.User(
         name=name, email=email, hashed_password=_hash.bcrypt.hash(user.password)
     )
+
+
+async def authenticate_user(email: str, password: str, db: _orm.Session):
+    user = await get_user_by_email(email=email, db=db)
+
+    if not user:
+        return False
+
+    if not user.is_verified:
+        return "is_verified_false"
+
+    if not user.verify_password(password):
+        return False
+
+    return user
+
+
+async def get_current_user(
+    db: _orm.Session = _fastapi.Depends(get_db),
+    token: str = _fastapi.Depends(oauth2schema),
+):
+    try:
+        payload = jwt.decode(token, JWT_SECRET, algorithms=["HS256"])
+        user = db.query(_models.User).get(payload["id"])
+    except:
+        raise _fastapi.HTTPException(
+            status_code=401, detail="Invalid Email or Password"
+        )
+    return _schemas.User.model_validate(user)
